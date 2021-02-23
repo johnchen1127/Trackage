@@ -1,0 +1,43 @@
+#trackage_title, #tracking_form, .input {
+    margin: auto;
+}
+
+#tracking_entry {
+    margin: 0 10% 0 10%;
+}
+
+#trackage_title {
+    text-align: center;
+}
+
+.track_array.dragging {
+    opacity: 50%;
+}
+
+#setTitle {
+    outline: 0;
+    border-width: 0 0 2px;
+    border-color: blue;
+}
+
+#setTitle:focus {
+    border-color: green;
+}
+
+body {
+    background: #f9f9f9 !important;
+    font-family: "Space Mono", serif !important;
+    font-size: 1rem !important;
+}
+
+.track_array {
+    padding-top: 50px;
+}
+
+.btn {
+    margin-right: 5px;
+}
+
+#trackage_title {
+    margin: 50px 0 20px 0;
+}

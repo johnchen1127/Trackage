@@ -1,0 +1,19 @@
+{
+  "name": "trackage",
+  "version": "1.0.0",
+  "description": "Tracks packages in a single webpage",
+  "main": "server.js",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "node-fetch": "^2.6.1",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "John Chen",
+  "license": "MIT"
+}

@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function findCarrier(trackingNum, refresh = false) {
     let upsRegex = [/\b(1Z ?[0-9A-Z]{3} ?[0-9A-Z]{3} ?[0-9A-Z]{2} ?[0-9A-Z]{4} ?[0-9A-Z]{3} ?[0-9A-Z]|[\dT]\d\d\d ?\d\d\d\d ?\d\d\d)\b/];
     //[/^(1Z)[0-9A-Z]{16}$/, /^(T)+[0-9A-Z]{10}$/, /^[0-9]{9}$/, /^[0-9]{26}$/];
-    let fedexRegex = [/(\b96\d{20}\b)|(\b\d{15}\b)|(\b\d{12}\b)/, /\b((98\d\d\d\d\d?\d\d\d\d|98\d\d) ?\d\d\d\d ?\d\d\d\d( ?\d\d\d)?)\b/, /^[0-9]{15}$/, /^926129\d{16}$/];
+    let fedexRegex = [/(\b96\d{20}\b)|(\b\d{15}\b)|(\b\d{12}\b)/, /\b((98\d\d\d\d\d?\d\d\d\d|98\d\d) ?\d\d\d\d ?\d\d\d\d( ?\d\d\d)?)\b/, /^[0-9]{15}$/, /^926129\d{16}$/, /^6129\d{16}$/];
     //[/^[0-9]{20}$/, /^[0-9]{15}$/, /^[0-9]{12}$/]/// /^[0-9]{22}$/];
     let uspsRegex = [/(\b\d{30}\b)|(\b91\d+\b)|(\b\d{20}\b)/, /^E\D{1}\d{9}\D{2}$|^9\d{15,21}$/, /^91[0-9]+$/, /^[A-Za-z]{2}[0-9]+US$/];
     //[/^(94|93|92|94|95)[0-9]{20}$/, /^(94|93|92|94|95)[0-9]{22}$/, /^(70|14|23|03)[0-9]{14}$/, /^(M0|82)[0-9]{8}$/, /^([A-Z]{2})[0-9]{9}([A-Z]{2})$/];
@@ -291,6 +291,12 @@ function parseFedEX(result, trackingNum, refresh) {
     const fedExArray = [trackingNum];
     const location = events.getElementsByTagName("City")[0].childNodes[0].nodeValue + ", " + events.getElementsByTagName("StateOrProvinceCode")[0].childNodes[0].nodeValue + ", " + events.getElementsByTagName("CountryCode")[0].childNodes[0].nodeValue;
     const timeDate = events.getElementsByTagName("Timestamp")[0].childNodes[0].nodeValue;
+    if (result.getElementsByTagName("ServiceCommitMessage")[0].childNodes[0].nodeValue != "No scheduled delivery date available at this time.") {
+        console.log(result.getElementsByTagName("ServiceCommitMessage")[0].childNodes[0].nodeValue);
+        console.log(vents.getElementsByTagName("Timestamp")[0].childNodes[0].nodeValue);
+    } else {
+        console.log("No scheduled delivery date available at this time.");
+    }
 
     //will need to turn this into an array later...
     let trackSummary = [{

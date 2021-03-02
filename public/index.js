@@ -1,12 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     for (let i = 0; i < localStorage.length; i++) {
-        let div = document.createElement("div");
-        let localContent = localStorage.getItem(localStorage.key(i));
-        div.innerHTML = localContent.substring(1,);
-        div.setAttribute("class", "track_array row");
-        div.setAttribute("draggable", "false");
-        (localContent.charAt(0) == "n") ? div.querySelector(".collapsible_div").style.display = "none" : div.querySelector(".collapsible_div").style.display = "block";
-        document.querySelector(".tracking_input").appendChild(div);
+        createDiv(JSON.parse(localStorage.getItem(localStorage.key(i))));
     }
 
     updatePage();
@@ -16,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let submit = document.querySelector('#submit_button');
     let tracking = document.querySelector('#track_number');
     let edit = document.querySelector('#edit');
+    let clear = document.querySelector('#clear_button');
 
     tracking.onkeyup = () => {
         if (tracking.value.length > 0) {
@@ -41,6 +36,14 @@ document.addEventListener('DOMContentLoaded', () => {
         submit.disabled = true;
         tracking.focus();
     };
+
+    clear.onclick = () => {
+        localStorage.clear();
+        document.querySelectorAll(".delete_button").forEach((button) => {
+            button.click();
+        });
+        clear.display = "none";
+    }
 
     //toggles draggable and delete buttons
     /*edit.onclick = () => {
@@ -139,26 +142,26 @@ function updatePage() {
             let grandParent = event.target.parentElement.parentElement;
             let trackingNum = grandParent.firstChild.innerHTML.substring(21,);
             let div = localStorage.getItem(trackingNum);
+            let jsonDetailArray = JSON.parse(localStorage.getItem(trackingNum))
             if (grandParent.parentElement.parentElement.querySelector(".collapsible_div").hasChildNodes()) {
+                //switches the display for the collapsed details if none then display
                 if (grandParent.parentElement.parentElement.querySelector(".collapsible_div").style.display == "none") {
                     event.target.classList.remove("bi-plus")
                     event.target.classList.add("bi-dash");
                     grandParent.parentElement.parentElement.querySelector(".collapsible_div").style.display = "block";
-                    div = "b" + div.substring(1,);
-                    div = div.substring(0, div.indexOf("bi-plus")) + "bi-dash" + div.substring(div.indexOf("bi-plus") + 7,);
+                    jsonDetailArray.expand = true;
                 } else {
                     event.target.classList.remove("bi-dash");
                     event.target.classList.add("bi-plus");
                     grandParent.parentElement.parentElement.querySelector(".collapsible_div").style.display = "none";
-                    div = "n" + div.substring(1,);
-                    div = div.substring(0, div.indexOf("bi-dash")) + "bi-plus" + div.substring(div.indexOf("bi-dash") + 7,);
+                    jsonDetailArray.expand = false;
                 }
-                localStorage.setItem(trackingNum, div);
+                localStorage.setItem(trackingNum, JSON.stringify(jsonDetailArray));
             }
         };
     });
 
-    //sends them back
+    //updaets
     document.querySelectorAll(".update_button").forEach((button) => {
         button.onclick = (event) => {
             let trackingNum = event.target.parentElement.parentElement.firstChild.innerHTML.substring(21,);
@@ -291,11 +294,15 @@ function parseFedEX(result, trackingNum, refresh) {
     const fedExArray = [trackingNum];
     const location = events.getElementsByTagName("City")[0].childNodes[0].nodeValue + ", " + events.getElementsByTagName("StateOrProvinceCode")[0].childNodes[0].nodeValue + ", " + events.getElementsByTagName("CountryCode")[0].childNodes[0].nodeValue;
     const timeDate = events.getElementsByTagName("Timestamp")[0].childNodes[0].nodeValue;
-    if (result.getElementsByTagName("ServiceCommitMessage")[0].childNodes[0].nodeValue != "No scheduled delivery date available at this time.") {
-        console.log(result.getElementsByTagName("ServiceCommitMessage")[0].childNodes[0].nodeValue);
-        console.log(vents.getElementsByTagName("Timestamp")[0].childNodes[0].nodeValue);
-    } else {
-        console.log("No scheduled delivery date available at this time.");
+    try {
+        if (result.getElementsByTagName("ServiceCommitMessage")[0].childNodes[0].nodeValue != "No scheduled delivery date available at this time.") {
+            console.log(result.getElementsByTagName("ServiceCommitMessage")[0].childNodes[0].nodeValue);
+            console.log(vents.getElementsByTagName("Timestamp")[0].childNodes[0].nodeValue);
+        } else {
+            console.log("No scheduled delivery date available at this time.");
+        }
+    } catch(err) {
+        alert(result.JSON);
     }
 
     //will need to turn this into an array later...
@@ -426,7 +433,7 @@ function getTime(time) {
 }
 
 //creates a div with h1 elements containing the package information (tracking number, scheduled delivery, last activity)
-function createDiv(detailArray, refresh) {
+function createDiv(detailArray, refresh, fromLocalStorage) {
     //tracking, scheduled delivery date, [{location, description, date, time}, ...]
     //row div
     const divHolder = document.createElement('div');
@@ -516,6 +523,9 @@ function createDiv(detailArray, refresh) {
         strArray[index].setAttribute("class", "list-group-item");
         index != 0 ? collapseUl.appendChild(strArray[index]) : cardDiv.appendChild(strArray[index]);
     });
+    if (detailArray.expand != true && refresh) {
+        detailArray.expand = false;
+    } 
     collapseUl.style.display = "none";
     cardDiv.appendChild(collapseUl);
     colDiv.appendChild(cardDiv);
@@ -533,15 +543,18 @@ function createDiv(detailArray, refresh) {
                 }
             });
         });
-        localStorage.setItem(trackingNum, "n" + divHolder.innerHTML);
+        localStorage.setItem(trackingNum, JSON.stringify(detailArray));
     } else {
         if (numOfTrack === 0) {
             document.querySelector('.tracking_input').append(divHolder);
         } else {
             document.querySelector('.tracking_input').insertBefore(divHolder, document.querySelector(".droppable_div"));
         }
-        localStorage.setItem(trackingNum, "n" +  divHolder.innerHTML);
+        localStorage.setItem(trackingNum, JSON.stringify(detailArray));
     }
     updatePage();
+    if (detailArray.expand) {
+
+    }
 }
 

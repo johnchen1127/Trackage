@@ -1,6 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
-    for (let i = 0; i < localStorage.length; i++) {
-        createDiv(JSON.parse(localStorage.getItem(localStorage.key(i))));
+    try {
+        for (let i = 0; i < localStorage.length; i++) {
+            createDiv(JSON.parse(localStorage.getItem(localStorage.key(i))));
+        }
+    } catch(err) {
+        localStorage.clear();
     }
 
     updatePage();

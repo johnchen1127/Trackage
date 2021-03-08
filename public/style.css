@@ -1,3 +1,12 @@
+@media only screen and (max-width: 575px) {
+    body {
+        font-size: 1rem!important;
+    }
+    #track_number {
+        font-size: 1rem!important;
+    }
+}
+
 #trackage_title, #tracking_form, .input {
     margin: auto;
 }
@@ -27,7 +36,6 @@
 body {
     background: #f9f9f9 !important;
     font-family: "Space Mono", serif !important;
-    font-size: 1rem !important;
 }
 
 .track_array {
@@ -44,5 +52,23 @@ body {
 
 #clear_button {
     margin-top: 20px;
+}
+
+.caret-off::before {
     display: none;
+}
+.caret-off::after {
+    display: none;
+}
+
+.card_title_textbox_hidden {
+    background-color:transparent;
+    border: 0px none;
+    outline: none;
+    font-size: 2rem;
+    width: 100%;
+}
+
+#card_title_textbox_visible {
+
 }

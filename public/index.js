@@ -42,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll(".delete_button").forEach((button) => {
             button.click();
         });
-        clear.display = "none";
     }
 
     //toggles draggable and delete buttons
@@ -55,6 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     };*/
+
+    window.onbeforeunload = function () {
+        updateTitle();
+    }
 });
 
 async function findCarrier(trackingNum, refresh = false) {
@@ -99,7 +102,7 @@ async function findCarrier(trackingNum, refresh = false) {
     let data = {
         trackingNum: trackingNum,
     }
-    console.log(fetchStr);
+
     const options = {
         headers: {
             'Content-Type': 'application/json'
@@ -134,13 +137,44 @@ async function findCarrier(trackingNum, refresh = false) {
     }
 }
 
+function updateTitle() {
+    document.querySelectorAll(".title_row").forEach((textBox) => {
+        let row = textBox.parentElement.childNodes[1];
+        let subStr = row.firstChild.innerHTML.substring(67,);
+        let trackingNum = subStr.substring(0,subStr.indexOf("</div>"));
+        let jsonDetailArray = JSON.parse(localStorage.getItem(trackingNum));
+        jsonDetailArray[3] = textBox.value;
+    });
+}
+
 function updatePage() {
+
+    //changes title to an "editable" textbox when clicking
+    document.querySelectorAll(".title_row").forEach((textBox) => {
+        textBox.onkeypress = (event) => {
+            if (event.keyCode == 13) {
+                let row = event.target.parentElement.childNodes[1];
+                let subStr = row.firstChild.innerHTML.substring(67,);
+                let trackingNum = subStr.substring(0,subStr.indexOf("</div>"));
+                let jsonDetailArray = JSON.parse(localStorage.getItem(trackingNum));
+                jsonDetailArray[3] = textBox.value;
+                localStorage.setItem(trackingNum, JSON.stringify(jsonDetailArray));
+                if (window.getSelection) { 
+                    window.getSelection().removeAllRanges();
+                } else if (document.selection) { 
+                    document.selection.empty();
+                }
+            }
+        }
+    });
+
     //collapses or expands
     document.querySelectorAll(".collapse_button").forEach((button) => {
         button.onclick = (event) => {
             //based on collapse button
             let grandParent = event.target.parentElement.parentElement;
-            let trackingNum = grandParent.firstChild.innerHTML.substring(21,);
+            let subStr = grandParent.firstChild.innerHTML.substring(67,);
+            let trackingNum = subStr.substring(0,subStr.indexOf("</div>"));
             let div = localStorage.getItem(trackingNum);
             let jsonDetailArray = JSON.parse(localStorage.getItem(trackingNum))
             if (grandParent.parentElement.parentElement.querySelector(".collapsible_div").hasChildNodes()) {
@@ -149,14 +183,13 @@ function updatePage() {
                     event.target.classList.remove("bi-plus")
                     event.target.classList.add("bi-dash");
                     grandParent.parentElement.parentElement.querySelector(".collapsible_div").style.display = "block";
-                    jsonDetailArray.expand = true;
+                    //jsonDetailArray.expand = true;
                 } else {
                     event.target.classList.remove("bi-dash");
                     event.target.classList.add("bi-plus");
                     grandParent.parentElement.parentElement.querySelector(".collapsible_div").style.display = "none";
-                    jsonDetailArray.expand = false;
+                    //jsonDetailArray.expand = false;
                 }
-                localStorage.setItem(trackingNum, JSON.stringify(jsonDetailArray));
             }
         };
     });
@@ -164,7 +197,9 @@ function updatePage() {
     //updaets
     document.querySelectorAll(".update_button").forEach((button) => {
         button.onclick = (event) => {
-            let trackingNum = event.target.parentElement.parentElement.firstChild.innerHTML.substring(21,);
+            let grandParent = event.target.parentElement.parentElement;
+            let subStr = grandParent.firstChild.innerHTML.substring(67,);
+            let trackingNum = subStr.substring(0,subStr.indexOf("</div>"));
             findCarrier(trackingNum, true);
         };
     });
@@ -172,8 +207,8 @@ function updatePage() {
     document.querySelectorAll(".delete_button").forEach((button) => {
         button.onclick = (event) => {
             let grandParent = event.target.parentElement.parentElement;
-            let trackingNum = grandParent.firstChild.innerHTML.substring(21,); 
-            console.log(trackingNum);
+            let subStr = grandParent.firstChild.innerHTML.substring(67,);
+            let trackingNum = subStr.substring(0,subStr.indexOf("</div>"));
             grandParent.parentElement.parentElement.parentElement.parentElement.remove();
             localStorage.removeItem(trackingNum);
         };
@@ -294,15 +329,20 @@ function parseFedEX(result, trackingNum, refresh) {
     const fedExArray = [trackingNum];
     const location = events.getElementsByTagName("City")[0].childNodes[0].nodeValue + ", " + events.getElementsByTagName("StateOrProvinceCode")[0].childNodes[0].nodeValue + ", " + events.getElementsByTagName("CountryCode")[0].childNodes[0].nodeValue;
     const timeDate = events.getElementsByTagName("Timestamp")[0].childNodes[0].nodeValue;
+    let scheduledDelivery = "";
     try {
-        if (result.getElementsByTagName("ServiceCommitMessage")[0].childNodes[0].nodeValue != "No scheduled delivery date available at this time.") {
-            console.log(result.getElementsByTagName("ServiceCommitMessage")[0].childNodes[0].nodeValue);
-            console.log(vents.getElementsByTagName("Timestamp")[0].childNodes[0].nodeValue);
+        if (result.getElementsByTagName("ServiceCommitMessage")[0]) {
+            console.log("supp");
+            if (result.getElementsByTagName("ServiceCommitMessage")[0].childNodes[0].nodeValue != "No scheduled delivery date available at this time.") {
+                console.log(result.getElementsByTagName("ServiceCommitMessage")[0].childNodes[0].nodeValue);
+                console.log(results.getElementsByTagName("Timestamp")[0].childNodes[0].nodeValue);
+                scheduledDelivery = "No scheduled delivery date available at this time.";
+            }
         } else {
-            console.log("No scheduled delivery date available at this time.");
+            scheduledDelivery = "No scheduled delivery date available at this time.";
         }
     } catch(err) {
-        alert(result.JSON);
+        alert(err);
     }
 
     //will need to turn this into an array later...
@@ -438,12 +478,16 @@ function createDiv(detailArray, refresh, fromLocalStorage) {
     //row div
     const divHolder = document.createElement('div');
     const colDiv = document.createElement('div');
+    const colTrackNDelivery = document.createElement('div');
+    const rowTrack = document.createElement('div');
+    const rowDelivery = document.createElement('div');
     const cardDiv = document.createElement("div");
     const cardHeaderDiv = document.createElement("div");
     const rowDiv = document.createElement("div");
     const trackingNumDiv = document.createElement("div");
     const deliveryDiv = document.createElement("div");
     const buttonDiv = document.createElement("div");
+    const titleRow = document.createElement('input');
 
     const strArray = [];
     let trackingNum = "";
@@ -456,13 +500,27 @@ function createDiv(detailArray, refresh, fromLocalStorage) {
     //list items
     const collapseUl = document.createElement('ul');
     let numOfTrack = document.querySelectorAll('.track_array').length;
+
+    titleRow.type = "text"; 
+    titleRow.setAttribute("class", "title_row card_title_textbox_hidden");
+    if (detailArray[3] == "Enter a title") {
+        titleRow.setAttribute("placeholder", detailArray[3]);
+    } else if (detailArray.length < 4) {
+        detailArray.push("Enter a title");
+        titleRow.setAttribute("placeholder", detailArray[3]);
+    } else {
+        titleRow.setAttribute("value", detailArray[3]);
+    }
     divHolder.setAttribute("class", "track_array row");
     colDiv.className = "col-12";
+    colTrackNDelivery.className = "col-8";
+    rowTrack.className = "row";
+    rowDelivery.className = "row";
     cardDiv.setAttribute("class", "card mx-auto");
     cardHeaderDiv.className = "card-header";
     rowDiv.className = "row";
-    trackingNumDiv.setAttribute("class", "col-4 tracking_num");
-    deliveryDiv.className = "col-4";
+    trackingNumDiv.setAttribute("class", "col-12 tracking_num");
+    deliveryDiv.className = "col-12";
     buttonDiv.className = "col-4";
     buttonDiv.style.textAlign = "right";
 
@@ -487,13 +545,17 @@ function createDiv(detailArray, refresh, fromLocalStorage) {
     detailArray.forEach((element, index) => {
         switch (index) {
             case 0:
-                trackingNumDiv.innerHTML = "Tracking Number: <br>" + element + "";
+                trackingNumDiv.innerHTML = "Tracking Number: " + element + "";
                 trackingNum = element;
-                rowDiv.append(trackingNumDiv);
+                rowDiv.append(colTrackNDelivery);
+                rowDiv.append(buttonDiv);
+                rowTrack.append(trackingNumDiv);
+                colTrackNDelivery.append(rowTrack);
                 break;
             case 1:
-                deliveryDiv.innerHTML = "Scheduled Delivery Date: <br>" + element + "";
-                rowDiv.append(deliveryDiv);
+                deliveryDiv.innerHTML = "Scheduled Delivery Date: " + element + "";
+                rowDelivery.append(deliveryDiv);
+                colTrackNDelivery.append(rowDelivery);
                 break;
             case 2:
                 break;
@@ -503,6 +565,7 @@ function createDiv(detailArray, refresh, fromLocalStorage) {
     });
 
     rowDiv.append(buttonDiv);
+    cardHeaderDiv.appendChild(titleRow);
     cardHeaderDiv.appendChild(rowDiv);
     //cardDiv.appendChild(title);
     cardDiv.appendChild(cardHeaderDiv);
@@ -523,9 +586,10 @@ function createDiv(detailArray, refresh, fromLocalStorage) {
         strArray[index].setAttribute("class", "list-group-item");
         index != 0 ? collapseUl.appendChild(strArray[index]) : cardDiv.appendChild(strArray[index]);
     });
+    /*
     if (detailArray.expand != true && refresh) {
         detailArray.expand = false;
-    } 
+    } */
     collapseUl.style.display = "none";
     cardDiv.appendChild(collapseUl);
     colDiv.appendChild(cardDiv);
